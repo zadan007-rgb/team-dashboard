@@ -1,33 +1,53 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Dashboard</title>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Team Dashboard</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-<h1>Team Dashboard</h1>
-
-<div id="userInfo"></div> 
-
-<h2>Attendance</h2>
-
-<button onclick="markAttendance('Office')">Office</button>
-<button onclick="markAttendance('WFH')">WFH</button>
-<button onclick="markAttendance('Leave')">Leave</button>
-
-<h2>Tasks</h2>
-
-<input id="taskInput" placeholder="New task">
-<button onclick="addTask()">Add Task</button>
-
-<ul id="taskList"></ul>
-
-<button onclick="logout()">Logout</button>
+<h1>Daily Team Roster</h1>
+<div class="sub" id="dateLabel"></div>
+<div class="day-strip" id="dayStrip"></div>
+<div class="metrics" id="metrics"></div>
+<hr>
+<div class="sec">Teams & attendance — click status badge to change</div>
+<div class="teams" id="teamsGrid"></div>
+<hr>
+<div class="sec">Task board</div>
+<div class="add-row">
+  <input id="tInp" placeholder="New task..."/>
+  <select id="tTeam">
+    <option value="amazon">Amazon Sales</option>
+    <option value="design">Designer</option>
+    <option value="support">Customer Support</option>
+    <option value="etsy">Etsy Sales</option>
+  </select>
+  <select id="tAssign"></select>
+  <select id="tStat">
+    <option value="todo">To Do</option>
+    <option value="inprogress">In Progress</option>
+    <option value="done">Done</option>
+  </select>
+  <button onclick="addTask()">+ Add</button>
+</div>
+<div class="task-board">
+  <div class="tcol"><div class="tct">To do</div><div id="col-todo"></div></div>
+  <div class="tcol"><div class="tct">In progress</div><div id="col-inprogress"></div></div>
+  <div class="tcol"><div class="tct">Done</div><div id="col-done"></div></div>
+</div>
+<hr>
+<div class="sec">Manager notes for today</div>
+<textarea id="notesArea" placeholder="Write your notes, follow-ups, observations..."></textarea>
+<div class="save-bar">
+  <button class="btn" onclick="saveAll()">💾 Save everything</button>
+  <button class="btn" onclick="clearToday()">🗑 Clear today</button>
+  <button class="btn" onclick="exportReport()">📋 Copy daily report</button>
+  <span class="saved-msg" id="savedMsg"></span>
+</div>
 
 <script src="config.js"></script>
 <script src="app.js"></script>
-
 </body>
 </html>
