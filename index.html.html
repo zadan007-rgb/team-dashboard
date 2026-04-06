@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Team Roster Dashboard</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#f5f5f3;color:#1a1a1a;padding:1.5rem}
+h1{font-size:20px;font-weight:600;margin-bottom:2px}
+.sub{font-size:13px;color:#666;margin-bottom:1.25rem}
+.day-strip{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.25rem}
+.dp{padding:5px 14px;border-radius:20px;font-size:13px;font-weight:500;border:1px solid #ccc;color:#555;background:#fff}
+.dp.office{background:#E1F5EE;color:#0F6E56;border-color:#5DCAA5}
+.dp.wfh{background:#E6F1FB;color:#185FA5;border-color:#85B7EB}
+.dp.active{box-shadow:0 0 0 2px #888}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:1.25rem}
+.met{background:#fff;border-radius:8px;padding:10px 14px;border:1px solid #eee}
+.met .v{font-size:22px;font-weight:600;color:#111}
+.met .l{font-size:12px;color:#888;margin-top:1px}
+.sec{font-size:14px;font-weight:600;color:#111;margin:1.25rem 0 8px}
+hr{border:none;border-top:1px solid #e5e5e5;margin:1.25rem 0}
+.teams{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.tc{background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:1rem}
+.th{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.ti{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px}
+.tn{font-size:14px;font-weight:600;color:#111}
+.tc2{font-size:12px;color:#888}
+.er{display:flex;align-items:center;justify-content:space-between;font-size:13px;padding:5px 8px;border-radius:6px;background:#f8f8f6;margin-bottom:5px}
+.lb{font-size:10px;padding:1px 6px;border-radius:8px;background:#FAEEDA;color:#854F0B;margin-left:4px}
+.sb{font-size:11px;padding:3px 10px;border-radius:10px;font-weight:500;cursor:pointer;border:none}
+.s-off{background:#E1F5EE;color:#0F6E56}
+.s-wfh{background:#E6F1FB;color:#185FA5}
+.s-leave{background:#FAECE7;color:#993C1D}
+.task-board{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.tcol{background:#f0efea;border-radius:8px;padding:10px}
+.tct{font-size:11px;font-weight:600;color:#888;margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em}
+.ti2{background:#fff;border:1px solid #e5e5e5;border-radius:6px;padding:7px 9px;margin-bottom:6px;font-size:12px;color:#111;cursor:pointer}
+.ti2:hover{border-color:#aaa}
+.ttag{font-size:10px;padding:1px 6px;border-radius:8px;margin-top:3px;display:inline-block}
+.tag-amazon{background:#FAEEDA;color:#854F0B}
+.tag-design{background:#EEEDFE;color:#3C3489}
+.tag-support{background:#E1F5EE;color:#085041}
+.tag-etsy{background:#FBEAF0;color:#72243E}
+.add-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.add-row input,.add-row select{font-size:13px;padding:6px 10px;border-radius:6px;border:1px solid #ccc;background:#fff;color:#111}
+.add-row input{flex:1;min-width:130px}
+.add-row button,.btn{font-size:13px;padding:6px 16px;border-radius:6px;border:1px solid #ccc;background:#fff;color:#111;cursor:pointer}
+.add-row button:hover,.btn:hover{background:#f0efea}
+textarea{width:100%;font-size:13px;padding:8px 10px;border-radius:8px;border:1px solid #ccc;background:#fff;color:#111;resize:vertical;min-height:70px;margin-bottom:8px;font-family:inherit}
+.save-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.saved-msg{font-size:12px;color:#0F6E56}
+@media(max-width:600px){.task-board{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<h1>Daily Team Roster</h1>
+<div class="sub" id="dateLabel"></div>
+<div class="day-strip" id="dayStrip"></div>
+<div class="metrics" id="metrics"></div>
+<hr>
+<div class="sec">Teams & attendance — click status badge to change</div>
+<div class="teams" id="teamsGrid"></div>
+<hr>
+<div class="sec">Task board</div>
+<div class="add-row">
+  <input id="tInp" placeholder="New task..."/>
+  <select id="tTeam">
+    <option value="amazon">Amazon Sales</option>
+    <option value="design">Designer</option>
+    <option value="support">Customer Support</option>
+    <option value="etsy">Etsy Sales</option>
+  </select>
+  <select id="tAssign"></select>
+  <select id="tStat">
+    <option value="todo">To Do</option>
+    <option value="inprogress">In Progress</option>
+    <option value="done">Done</option>
+  </select>
+  <button onclick="addTask()">+ Add</button>
+</div>
+<div class="task-board">
+  <div class="tcol"><div class="tct">To do</div><div id="col-todo"></div></div>
+  <div class="tcol"><div class="tct">In progress</div><div id="col-inprogress"></div></div>
+  <div class="tcol"><div class="tct">Done</div><div id="col-done"></div></div>
+</div>
+<hr>
+<div class="sec">Manager notes for today</div>
+<textarea id="notesArea" placeholder="Write your notes, follow-ups, observations..."></textarea>
+<div class="save-bar">
+  <button class="btn" onclick="saveAll()">💾 Save everything</button>
+  <button class="btn" onclick="clearToday()">🗑 Clear today</button>
+  <button class="btn" onclick="exportReport()">📋 Copy daily report</button>
+  <span class="saved-msg" id="savedMsg"></span>
+</div>
+
+<script>
+const DAYS=[{n:'Mon',t:'office'},{n:'Tue',t:'wfh'},{n:'Wed',t:'office'},{n:'Thu',t:'wfh'},{n:'Fri',t:'office'},{n:'Sat',t:'wfh'}];
+const DAY_MAP={1:'Mon',2:'Tue',3:'Wed',4:'Thu',5:'Fri',6:'Sat',0:'Sun'};
+const now=new Date();
+const todayName=DAY_MAP[now.getDay()];
+const todayType=DAYS.find(d=>d.n===todayName)?.t||'office';
+const dateKey='roster-'+now.toISOString().slice(0,10);
+
+const TEAMS=[
+  {id:'amazon',name:'Amazon Sales',color:'amber',icon:'📦',members:[
+    {name:'Umar',lead:true},{name:'Jahanzeb',lead:true},{name:'Iqrar',lead:true},{name:'Moin',lead:true},{name:'Arslan',lead:true}
+  ]},
+  {id:'design',name:'Designer',color:'purple',icon:'🎨',members:[
+    {name:'Ishaq',lead:false}
+  ]},
+  {id:'support',name:'Customer Support',color:'teal',icon:'🎧',members:[
+    {name:'Shahbaz',lead:true}
+  ]},
+  {id:'etsy',name:'Etsy Sales',color:'pink',icon:'🛍',members:[
+    {name:'Hina',lead:true},{name:'Warzan',lead:true}
+  ]}
+];
+const CMAP={amber:{bg:'#FAEEDA',c:'#854F0B'},purple:{bg:'#EEEDFE',c:'#3C3489'},teal:{bg:'#E1F5EE',c:'#085041'},pink:{bg:'#FBEAF0',c:'#72243E'}};
+const TLABEL={amazon:'Amazon Sales',design:'Designer',support:'Customer Support',etsy:'Etsy Sales'};
+
+let attendance={};
+let tasks=[];
+
+function loadData(){
+  try{
+    const a=localStorage.getItem(dateKey+'-att');
+    attendance=a?JSON.parse(a):{};
+  }catch(e){attendance={};}
+  if(!Object.keys(attendance).length){
+    TEAMS.forEach(t=>t.members.forEach((m,i)=>{
+      attendance[t.id+'-'+m.name]=i%2===0?todayType:todayType==='office'?'wfh':'office';
+    }));
+  }
+  try{
+    const tk=localStorage.getItem(dateKey+'-tasks');
+    tasks=tk?JSON.parse(tk):[
+      {text:'Review daily Amazon listings',team:'amazon',assignee:'Umar',status:'todo'},
+      {text:'Check open support tickets',team:'support',assignee:'Shahbaz',status:'todo'},
+      {text:'Etsy shop updates',team:'etsy',assignee:'Hina',status:'todo'},
+    ];
+  }catch(e){tasks=[];}
+  try{document.getElementById('notesArea').value=localStorage.getItem(dateKey+'-notes')||'';}catch(e){}
+  render();
+}
+
+function saveAll(){
+  localStorage.setItem(dateKey+'-att',JSON.stringify(attendance));
+  localStorage.setItem(dateKey+'-tasks',JSON.stringify(tasks));
+  localStorage.setItem(dateKey+'-notes',document.getElementById('notesArea').value);
+  const m=document.getElementById('savedMsg');
+  m.textContent='Saved at '+now.toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'});
+  setTimeout(()=>m.textContent='',3000);
+}
+
+function clearToday(){
+  if(!confirm('Clear all data for today?'))return;
+  localStorage.removeItem(dateKey+'-att');
+  localStorage.removeItem(dateKey+'-tasks');
+  localStorage.removeItem(dateKey+'-notes');
+  attendance={};tasks=[];
+  TEAMS.forEach(t=>t.members.forEach((m,i)=>{attendance[t.id+'-'+m.name]=i%2===0?todayType:todayType==='office'?'wfh':'office';}));
+  document.getElementById('notesArea').value='';
+  render();
+}
+
+function exportReport(){
+  const d=now.toLocaleDateString('en-PK',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  let txt=`Daily Team Report — ${d}\n${'='.repeat(40)}\n\n`;
+  TEAMS.forEach(t=>{
+    txt+=`${t.name.toUpperCase()}\n`;
+    t.members.forEach(m=>{
+      const st=attendance[t.id+'-'+m.name]||'office';
+      txt+=`  ${m.name}${m.lead?' (Lead)':''}: ${st==='office'?'In Office':st==='wfh'?'WFH':'On Leave'}\n`;
+    });
+    txt+='\n';
+  });
+  txt+=`TASKS\n`;
+  ['todo','inprogress','done'].forEach(s=>{
+    const label={todo:'To Do',inprogress:'In Progress',done:'Done'}[s];
+    const ts=tasks.filter(t=>t.status===s);
+    if(ts.length){txt+=`  [${label}]\n`;ts.forEach(t=>{txt+=`    - ${t.text} (${TLABEL[t.team]} / ${t.assignee})\n`;});}
+  });
+  const notes=document.getElementById('notesArea').value;
+  if(notes.trim())txt+=`\nNOTES\n${notes}`;
+  navigator.clipboard.writeText(txt).then(()=>{
+    const m=document.getElementById('savedMsg');
+    m.textContent='Report copied to clipboard!';
+    setTimeout(()=>m.textContent='',3000);
+  });
+}
+
+function cycleStatus(teamId,name){
+  const key=teamId+'-'+name;
+  const cur=attendance[key]||'office';
+  attendance[key]={office:'wfh',wfh:'leave',leave:'office'}[cur];
+  renderTeams();renderMetrics();
+}
+
+function cycleTask(i){
+  const order=['todo','inprogress','done'];
+  tasks[i].status=order[(order.indexOf(tasks[i].status)+1)%3];
+  renderTasks();renderMetrics();
+}
+
+function addTask(){
+  const inp=document.getElementById('tInp');
+  if(!inp.value.trim())return;
+  tasks.push({text:inp.value.trim(),team:document.getElementById('tTeam').value,assignee:document.getElementById('tAssign').value,status:document.getElementById('tStat').value});
+  inp.value='';renderTasks();renderMetrics();
+}
+
+function render(){
+  document.getElementById('dateLabel').textContent=now.toLocaleDateString('en-PK',{weekday:'long',year:'numeric',month:'long',day:'numeric'})+' — '+(todayType==='office'?'Office day':'Work from home day');
+  document.getElementById('dayStrip').innerHTML=DAYS.map(d=>`<div class="dp ${d.t}${d.n===todayName?' active':''}">${d.n} — ${d.t==='office'?'Office':'WFH'}</div>`).join('');
+  renderMetrics();renderTeams();renderTasks();
+  const tSel=document.getElementById('tTeam');
+  const aSel=document.getElementById('tAssign');
+  function upd(){const t=TEAMS.find(x=>x.id===tSel.value);aSel.innerHTML=t.members.map(m=>`<option>${m.name}</option>`).join('');}
+  tSel.onchange=upd;upd();
+}
+
+function renderMetrics(){
+  const vals=Object.values(attendance);
+  document.getElementById('metrics').innerHTML=[
+    {v:TEAMS.reduce((a,t)=>a+t.members.length,0),l:'Total employees'},
+    {v:vals.filter(v=>v==='office').length,l:'In office'},
+    {v:vals.filter(v=>v==='wfh').length,l:'WFH'},
+    {v:vals.filter(v=>v==='leave').length,l:'On leave'},
+    {v:tasks.filter(t=>t.status==='inprogress').length,l:'In progress'}
+  ].map(m=>`<div class="met"><div class="v">${m.v}</div><div class="l">${m.l}</div></div>`).join('');
+}
+
+function renderTeams(){
+  document.getElementById('teamsGrid').innerHTML=TEAMS.map(t=>{
+    const col=CMAP[t.color];
+    return `<div class="tc"><div class="th"><div class="ti" style="background:${col.bg};color:${col.c}">${t.icon}</div><div><div class="tn">${t.name}</div><div class="tc2">${t.members.length} member${t.members.length>1?'s':''}</div></div></div>${
+      t.members.map(m=>{
+        const st=attendance[t.id+'-'+m.name]||'office';
+        const cls={office:'s-off',wfh:'s-wfh',leave:'s-leave'}[st];
+        const lbl={office:'In office',wfh:'WFH',leave:'Leave'}[st];
+        return `<div class="er"><span>${m.name}${m.lead?'<span class="lb">Lead</span>':''}</span><button class="sb ${cls}" onclick="cycleStatus('${t.id}','${m.name}')">${lbl}</button></div>`;
+      }).join('')
+    }</div>`;
+  }).join('');
+}
+
+function renderTasks(){
+  ['todo','inprogress','done'].forEach(s=>{
+    document.getElementById('col-'+s).innerHTML=tasks.filter(t=>t.status===s).map((t)=>{
+      const i=tasks.indexOf(t);
+      return `<div class="ti2" onclick="cycleTask(${i})">${t.text}<br><span class="ttag tag-${t.team}">${TLABEL[t.team]}</span> <span style="font-size:11px;color:#888">${t.assignee}</span></div>`;
+    }).join('');
+  });
+}
+
+loadData();
+</script>
+</body>
+</html>
