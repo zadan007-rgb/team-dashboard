@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>TeamHub Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --primary:#1a1a2e;--accent:#4f46e5;
+  --bg:#f8f7ff;--card:#fff;--border:#e5e3f0;
+  --text:#1a1a2e;--muted:#6b6880;
+  --success:#059669;--warn:#d97706;--danger:#dc2626;--info:#0284c7;
+  --sidebar-w:220px;
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%)}
+.login-box{background:#fff;border-radius:16px;padding:2.5rem;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.login-logo{text-align:center;margin-bottom:1.5rem}
+.login-logo .brand{font-size:22px;font-weight:700;color:var(--primary)}
+.login-logo .sub{font-size:12px;color:var(--muted);margin-top:4px}
+.login-title{font-size:18px;font-weight:600;margin-bottom:1.5rem}
+.form-group{margin-bottom:1rem}
+.form-group label{display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+.form-group select,.form-group input,.form-group textarea{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;color:var(--text);outline:none;background:#fff;font-family:inherit}
+.form-group select:focus,.form-group input:focus,.form-group textarea:focus{border-color:var(--accent)}
+.form-group textarea{resize:vertical;min-height:80px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .15s;font-family:inherit}
+.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:#4338ca}
+.btn-secondary{background:var(--bg);color:var(--text);border:1.5px solid var(--border)}.btn-secondary:hover{background:#ede9fe}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-success{background:var(--success);color:#fff}
+.btn-sm{padding:6px 12px;font-size:12px}.btn-full{width:100%}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+.spinner-dark{border-color:rgba(79,70,229,.2);border-top-color:var(--accent)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.app{display:flex;min-height:100vh}
+.sidebar{width:var(--sidebar-w);background:var(--primary);color:#fff;display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;overflow-y:auto;z-index:100}
+.sidebar-brand{padding:1.25rem 1rem;border-bottom:1px solid rgba(255,255,255,.1)}
+.sidebar-brand .name{font-size:16px;font-weight:700}
+.sidebar-brand .role{font-size:11px;color:rgba(255,255,255,.5);margin-top:2px;text-transform:uppercase;letter-spacing:.5px}
+.sidebar-user{padding:.75rem 1rem;display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(255,255,255,.1)}
+.avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0}
+.sidebar-user .uname{font-size:13px;font-weight:500}
+.sidebar-user .urole{font-size:11px;color:rgba(255,255,255,.5)}
+.sidebar-nav{padding:.75rem 0;flex:1}
+.nav-section{padding:.5rem 1rem .25rem;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,.3)}
+.nav-item{display:flex;align-items:center;gap:8px;padding:.6rem 1rem;cursor:pointer;font-size:13px;color:rgba(255,255,255,.7);border-left:3px solid transparent;transition:all .15s}
+.nav-item:hover{background:rgba(255,255,255,.07);color:#fff}
+.nav-item.active{background:rgba(79,70,229,.3);color:#fff;border-left-color:var(--accent)}
+.nav-icon{width:16px;text-align:center;font-size:14px}
+.sidebar-footer{padding:1rem;border-top:1px solid rgba(255,255,255,.1)}
+.sidebar-footer .btn{font-size:12px;background:rgba(255,255,255,.1);color:#fff;border:none;width:100%}
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{background:var(--card);border-bottom:1px solid var(--border);padding:.75rem 1.5rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.topbar-title{font-size:16px;font-weight:600}
+.topbar-meta{font-size:12px;color:var(--muted)}
+.topbar-right{display:flex;align-items:center;gap:.75rem}
+.page{padding:1.5rem;flex:1}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.25rem}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem;margin-bottom:1.5rem}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1rem}
+.stat-label{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:.5rem;font-weight:500}
+.stat-value{font-size:26px;font-weight:700;line-height:1}
+.stat-sub{font-size:11px;color:var(--muted);margin-top:.25rem}
+.stat-icon{font-size:18px;margin-bottom:.5rem}
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500}
+.badge-blue{background:#dbeafe;color:#1e40af}.badge-green{background:#d1fae5;color:#065f46}
+.badge-amber{background:#fef3c7;color:#92400e}.badge-red{background:#fee2e2;color:#991b1b}
+.badge-purple{background:#ede9fe;color:#4c1d95}.badge-gray{background:#f3f4f6;color:#4b5563}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.section-title{font-size:15px;font-weight:600}
+.section-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:.6rem .75rem;border-bottom:2px solid var(--border);color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;font-weight:500}
+td{padding:.6rem .75rem;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#faf9ff}
+.kanban{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+.kanban-col{background:#f5f3ff;border-radius:10px;padding:.875rem}
+.kanban-col-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem}
+.kanban-col-title{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.kanban-count{background:rgba(0,0,0,.08);border-radius:20px;padding:1px 7px;font-size:11px;font-weight:600}
+.task-card{background:#fff;border:1px solid var(--border);border-radius:8px;padding:.75rem;margin-bottom:.625rem;transition:box-shadow .15s}
+.task-card:hover{box-shadow:0 2px 8px rgba(79,70,229,.12)}
+.task-title{font-size:13px;font-weight:500;margin-bottom:.5rem;line-height:1.4}
+.task-meta{display:flex;flex-wrap:wrap;gap:.375rem;align-items:center}
+.priority-dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+.p-hig{background:var(--danger)}.p-med{background:var(--warn)}.p-low{background:var(--success)}
+.att-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.75rem}
+.att-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.875rem;display:flex;align-items:center;gap:.75rem}
+.att-name{font-size:13px;font-weight:500}
+.att-team{font-size:11px;color:var(--muted)}
+.att-btn{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;border:1.5px solid;transition:all .15s;background:transparent;font-family:inherit}
+.att-btn.o{border-color:#3b82f6;color:#3b82f6}.att-btn.o.active,.att-btn.o:hover{background:#3b82f6;color:#fff}
+.att-btn.w{border-color:#10b981;color:#10b981}.att-btn.w.active,.att-btn.w:hover{background:#10b981;color:#fff}
+.att-btn.a{border-color:#ef4444;color:#ef4444}.att-btn.a.active,.att-btn.a:hover{background:#ef4444;color:#fff}
+.team-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem}
+.team-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.team-card-head{padding:1rem 1.25rem;display:flex;align-items:center;gap:.75rem}
+.team-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.team-name{font-size:14px;font-weight:600}
+.team-lead{font-size:11px;color:var(--muted)}
+.team-members{padding:.5rem 1.25rem 1rem;border-top:1px solid var(--border)}
+.member-row{display:flex;align-items:center;gap:.5rem;padding:.3rem 0;font-size:12px}
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:200}
+.modal{background:#fff;border-radius:14px;padding:1.5rem;width:100%;max-width:480px;max-height:85vh;overflow-y:auto}
+.modal-title{font-size:16px;font-weight:600;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between}
+.modal-close{cursor:pointer;font-size:18px;color:var(--muted);background:none;border:none;line-height:1}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.note-card{background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:1rem;margin-bottom:.75rem;position:relative}
+.note-meta{font-size:11px;color:var(--warn);margin-bottom:.375rem;font-weight:500}
+.progress-bar{height:6px;background:#e5e7eb;border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;border-radius:3px}
+.alert-toast{position:fixed;bottom:1.5rem;right:1.5rem;padding:.75rem 1.25rem;border-radius:10px;font-size:13px;font-weight:500;z-index:999;box-shadow:0 4px 12px rgba(0,0,0,.15)}
+.alert-success{background:#d1fae5;color:#065f46;border:1px solid #6ee7b7}
+.alert-info{background:#dbeafe;color:#1e40af;border:1px solid #93c5fd}
+.alert-error{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5}
+.loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.8);display:flex;align-items:center;justify-content:center;z-index:500;flex-direction:column;gap:.75rem}
+.loading-text{font-size:14px;color:var(--muted)}
+.sync-badge{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--success)}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:var(--success)}
+.divider{height:1px;background:var(--border);margin:1rem 0}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:90}
+.overlay.open{display:block}
+.menu-toggle{display:none;background:none;border:none;font-size:20px;cursor:pointer;padding:4px}
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%);transition:transform .25s}
+  .sidebar.open{transform:translateX(0)}
+  .main{margin-left:0}
+  .grid2,.kanban{grid-template-columns:1fr}
+  .stat-grid{grid-template-columns:repeat(2,1fr)}
+  .field-row{grid-template-columns:1fr}
+  .topbar,.page{padding:.875rem 1rem}
+  .menu-toggle{display:block}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ IMPORTANT: Replace this URL with your Apps Script URL ============ -->
+<script>
+// PASTE YOUR APPS SCRIPT WEB APP URL HERE (Step 4 of the setup guide)
+const API_URL = 'https://script.google.com/macros/s/AKfycbwbmiD8uHhT4oV1Q6vP_-lY9QX-7Yc3uIamxgVoi-K5g8T1Vo0XmYD2EYuDUvY5PNdS/exec';
+// Example: const API_URL = 'https://script.google.com/macros/s/AKfycb.../exec';
+</script>
+<!-- ============================================================================= -->
+
+<div id="root"></div>
+
+<script>
+// ============================================================
+// CONFIGURATION
+// ============================================================
+const TEAMS = ['Amazon Sales','Designer','Customer Support','Etsy Sales'];
+const TEAM_ICONS = {'Amazon Sales':'🛒','Designer':'🎨','Customer Support':'🎧','Etsy Sales':'🏪'};
+const TEAM_COLORS = {'Amazon Sales':'#dbeafe','Designer':'#ede9fe','Customer Support':'#d1fae5','Etsy Sales':'#fef3c7'};
+const TEAM_LEADS = {'Amazon Sales':'Sara','Designer':'Ali','Customer Support':'Fatima','Etsy Sales':'Ayesha'};
+const TODAY = new Date().toISOString().split('T')[0];
+
+// ============================================================
+// STATE
+// ============================================================
+let store = { users:[], attendance:[], tasks:[], notes:[] };
+let state = {
+  loggedIn:false, user:null, page:'dashboard',
+  showTaskModal:false, editTask:null,
+  showNoteModal:false, mobileOpen:false,
+  loading:false, syncing:false
+};
+
+// ============================================================
+// API
+// ============================================================
+async function apiGet() {
+  if (!API_URL || API_URL === 'YOUR_APPS_SCRIPT_URL_HERE') return null;
+  const res = await fetch(API_URL + '?action=getData');
+  return res.json();
+}
+
+async function apiPost(body) {
+  if (!API_URL || API_URL === 'YOUR_APPS_SCRIPT_URL_HERE') return { ok:true };
+  const res = await fetch(API_URL, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(body)
+  });
+  return res.json();
+}
+
+async function loadData() {
+  state.loading = true; render();
+  try {
+    const data = await apiGet();
+    if (data && !data.error) {
+      store.users      = data.users      || [];
+      store.attendance = data.attendance || [];
+      store.tasks      = data.tasks      || [];
+      store.notes      = data.notes      || [];
+    }
+  } catch(e) { showToast('Could not connect to Google Sheets. Using demo data.','error'); }
+  state.loading = false;
+}
+
+// ============================================================
+// ATTENDANCE HELPERS
+// ============================================================
+function getAttStatus(userId) {
+  const row = store.attendance.find(a => a.date == TODAY && a.userId == userId);
+  return row ? row.status : null;
+}
+
+async function setAttStatus(userId, status) {
+  store.attendance = store.attendance.filter(a => !(a.date==TODAY && a.userId==userId));
+  store.attendance.push({date:TODAY, userId:String(userId), status});
+  render();
+  await apiPost({action:'saveAttendance', date:TODAY, userId:String(userId), status});
+  showToast('Attendance saved: ' + status);
+}
+
+// ============================================================
+// TASK HELPERS
+// ============================================================
+async function saveTask(data) {
+  const res = await apiPost({action:'saveTask', ...data});
+  if (data.id) {
+    const idx = store.tasks.findIndex(t => t.id == data.id);
+    if (idx > -1) store.tasks[idx] = {...store.tasks[idx], ...data};
+  } else {
+    const newId = res.id || String(Date.now());
+    store.tasks.push({...data, id:newId});
+  }
+  showToast(data.id ? 'Task updated' : 'Task created');
+  state.showTaskModal = false; state.editTask = null; render();
+}
+
+async function deleteTask(id) {
+  store.tasks = store.tasks.filter(t => t.id != id);
+  await apiPost({action:'deleteTask', id:String(id)});
+  showToast('Task deleted','info');
+  state.showTaskModal = false; state.editTask = null; render();
+}
+
+async function moveTask(id, newStatus) {
+  const t = store.tasks.find(x => x.id == id);
+  if (!t) return;
+  t.status = newStatus;
+  await apiPost({action:'saveTask', ...t});
+  showToast('Task moved to ' + newStatus);
+  render();
+}
+
+// ============================================================
+// NOTE HELPERS
+// ============================================================
+async function saveNote(text) {
+  const note = {id:String(Date.now()), author:state.user.name, text, date:TODAY};
+  store.notes.unshift(note);
+  await apiPost({action:'saveNote', ...note});
+  showToast('Note saved');
+  state.showNoteModal = false; render();
+}
+
+async function deleteNote(id) {
+  store.notes = store.notes.filter(n => n.id != id);
+  await apiPost({action:'deleteNote', id:String(id)});
+  showToast('Note deleted','info');
+  render();
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+let toastTimer;
+function showToast(msg, type='success') {
+  clearTimeout(toastTimer);
+  const existing = document.querySelector('.alert-toast');
+  if (existing) existing.remove();
+  const el = document.createElement('div');
+  el.className = 'alert-toast alert-' + type;
+  el.textContent = msg;
+  document.body.appendChild(el);
+  toastTimer = setTimeout(() => el.remove(), 3000);
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+function render() {
+  const root = document.getElementById('root');
+  if (state.loading) { root.innerHTML = `<div class="loading-overlay"><div class="spinner spinner-dark"></div><div class="loading-text">Loading data from Google Sheets…</div></div>`; return; }
+  if (!state.loggedIn) { root.innerHTML = loginHTML(); bindLogin(); return; }
+  root.innerHTML = appShell();
+  bindNav();
+  document.getElementById('page-content').innerHTML = renderPage();
+  bindPage();
+  if (state.page === 'analytics') setTimeout(initCharts, 50);
+}
+
+// ============================================================
+// LOGIN
+// ============================================================
+function loginHTML() {
+  const demoMode = !API_URL || API_URL === 'YOUR_APPS_SCRIPT_URL_HERE';
+  return `<div class="login-wrap"><div class="login-box">
+    <div class="login-logo"><div class="brand">🏢 TeamHub</div><div class="sub">Internal Company Dashboard</div></div>
+    <div class="login-title">Sign In</div>
+    ${demoMode ? `<div style="background:#fef3c7;border:1px solid #fde68a;border-radius:8px;padding:.75rem;font-size:12px;margin-bottom:1rem;color:#92400e"><strong>Demo Mode</strong> — not connected to Google Sheets yet. Follow the setup guide to connect.</div>` : ''}
+    <div class="form-group"><label>Account</label>
+      <select id="sel-user"><option value="">— Select account —</option>
+        ${store.users.map(u=>`<option value="${u.id}">${u.name} (${u.role})</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group"><label>Password</label><input type="password" id="inp-pass" placeholder="Enter password"/></div>
+    <div id="login-err" style="color:#dc2626;font-size:12px;margin-bottom:.75rem;display:none"></div>
+    <button class="btn btn-primary btn-full" id="btn-login">Sign In</button>
+    <div style="margin-top:1.25rem;padding:1rem;background:#f5f3ff;border-radius:8px;font-size:12px;color:var(--muted)">
+      <p><strong style="color:var(--accent)">Naseem (Director):</strong> naseem123</p>
+      <p><strong style="color:var(--accent)">Zain (Manager):</strong> zain123</p>
+      <p><strong style="color:var(--accent)">All employees:</strong> pass</p>
+    </div>
+  </div></div>`;
+}
+
+function bindLogin() {
+  const doLogin = () => {
+    const uid = +document.getElementById('sel-user').value;
+    const pass = document.getElementById('inp-pass').value;
+    const u = store.users.find(x => +x.id === uid);
+    if (!u || u.pass !== pass) {
+      const el = document.getElementById('login-err');
+      el.style.display = 'block'; el.textContent = 'Invalid credentials.'; return;
+    }
+    state.user = u; state.loggedIn = true; state.page = 'dashboard'; render();
+  };
+  document.getElementById('btn-login').onclick = doLogin;
+  document.getElementById('inp-pass').onkeydown = e => { if(e.key==='Enter') doLogin(); };
+}
+
+// ============================================================
+// APP SHELL
+// ============================================================
+function navItems() {
+  const r = state.user.role;
+  return [
+    {id:'dashboard',icon:'📊',label:'Dashboard',roles:['director','manager','employee']},
+    {id:'attendance',icon:'📅',label:'Attendance',roles:['director','manager','employee']},
+    {id:'tasks',icon:'✅',label:'Tasks',roles:['director','manager','employee']},
+    {id:'teams',icon:'👥',label:'Teams',roles:['director','manager']},
+    {id:'analytics',icon:'📈',label:'Analytics',roles:['director']},
+    {id:'report',icon:'📄',label:'Reports',roles:['director','manager']},
+    {id:'notes',icon:'📝',label:'Notes',roles:['director','manager']},
+  ].filter(i => i.roles.includes(r));
+}
+
+function appShell() {
+  const nav = navItems();
+  const titles = {dashboard:'Dashboard',attendance:'Attendance',tasks:'Tasks',teams:'Teams',analytics:'Analytics',report:'Report',notes:'Notes'};
+  const connected = API_URL && API_URL !== 'YOUR_APPS_SCRIPT_URL_HERE';
+  return `
+  <div class="overlay${state.mobileOpen?' open':''}" id="overlay"></div>
+  <div class="app">
+    <div class="sidebar${state.mobileOpen?' open':''}" id="sidebar">
+      <div class="sidebar-brand"><div class="name">🏢 TeamHub</div><div class="role">Company Portal</div></div>
+      <div class="sidebar-user">
+        <div class="avatar" style="background:${state.user.color}22;color:${state.user.color}">${state.user.name[0]}</div>
+        <div><div class="uname">${state.user.name}</div><div class="urole">${cap(state.user.role)}</div></div>
+      </div>
+      <div class="sidebar-nav">
+        <div class="nav-section">Navigation</div>
+        ${nav.map(i=>`<div class="nav-item${state.page===i.id?' active':''}" data-page="${i.id}"><span class="nav-icon">${i.icon}</span>${i.label}</div>`).join('')}
+      </div>
+      <div class="sidebar-footer"><button class="btn" id="btn-logout">↩ Sign Out</button></div>
+    </div>
+    <div class="main">
+      <div class="topbar">
+        <div style="display:flex;align-items:center;gap:.75rem">
+          <button class="menu-toggle" id="menu-toggle">☰</button>
+          <div><div class="topbar-title">${titles[state.page]||'Dashboard'}</div><div class="topbar-meta">${fmtDate()}</div></div>
+        </div>
+        <div class="topbar-right">
+          ${connected ? `<div class="sync-badge"><div class="sync-dot"></div>Live</div>` : `<span style="font-size:11px;color:var(--warn)">⚠ Demo</span>`}
+          <span class="badge badge-${state.user.role==='director'?'purple':state.user.role==='manager'?'blue':'green'}">${cap(state.user.role)}</span>
+        </div>
+      </div>
+      <div class="page" id="page-content"></div>
+    </div>
+  </div>`;
+}
+
+function bindNav() {
+  document.querySelectorAll('.nav-item[data-page]').forEach(el => {
+    el.onclick = () => { state.page = el.dataset.page; state.mobileOpen = false; render(); };
+  });
+  const lo = document.getElementById('btn-logout');
+  if (lo) lo.onclick = () => { state.loggedIn=false; state.user=null; render(); };
+  const mt = document.getElementById('menu-toggle');
+  if (mt) mt.onclick = () => { state.mobileOpen=!state.mobileOpen; render(); };
+  const ov = document.getElementById('overlay');
+  if (ov) ov.onclick = () => { state.mobileOpen=false; render(); };
+}
+
+// ============================================================
+// PAGES
+// ============================================================
+function renderPage() {
+  const pages = {dashboard:pgDashboard,attendance:pgAttendance,tasks:pgTasks,teams:pgTeams,analytics:pgAnalytics,report:pgReport,notes:pgNotes};
+  return (pages[state.page]||pgDashboard)();
+}
+
+function pgDashboard() {
+  const emps = store.users.filter(u=>u.role==='employee');
+  const office = emps.filter(u=>getAttStatus(u.id)==='Office').length;
+  const wfh = emps.filter(u=>getAttStatus(u.id)==='WFH').length;
+  const done = store.tasks.filter(t=>t.status==='Completed').length;
+  const inp = store.tasks.filter(t=>t.status==='In Progress').length;
+  const todo = store.tasks.filter(t=>t.status==='To Do').length;
+
+  let mySection = '';
+  if (state.user.role==='employee') {
+    const myTasks = store.tasks.filter(t=>t.assignee===state.user.name);
+    const myAtt = getAttStatus(state.user.id);
+    mySection = `<div class="grid2" style="margin-bottom:1.25rem">
+      <div class="card">
+        <div class="section-title" style="margin-bottom:.875rem">My Attendance Today</div>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+          <button class="att-btn o${myAtt==='Office'?' active':''}" data-att="Office" data-uid="${state.user.id}">🏢 Office</button>
+          <button class="att-btn w${myAtt==='WFH'?' active':''}" data-att="WFH" data-uid="${state.user.id}">🏠 WFH</button>
+          <button class="att-btn a${myAtt==='Absent'?' active':''}" data-att="Absent" data-uid="${state.user.id}">❌ Absent</button>
+        </div>
+        <div style="margin-top:.625rem;font-size:12px;color:var(--muted)">${myAtt?'Marked as: <strong>'+myAtt+'</strong>':'Not marked yet'}</div>
+      </div>
+      <div class="card">
+        <div class="section-title" style="margin-bottom:.875rem">My Tasks</div>
+        ${myTasks.length ? myTasks.map(t=>`<div style="display:flex;align-items:center;gap:.5rem;padding:.375rem 0;border-bottom:1px solid var(--border)">
+          <span class="priority-dot p-${t.priority?t.priority.substring(0,3).toLowerCase():'low'}"></span>
+          <span style="flex:1;font-size:13px">${t.title}</span>
+          <span class="badge badge-${t.status==='Completed'?'green':t.status==='In Progress'?'blue':'gray'}">${t.status}</span>
+        </div>`).join('') : '<div style="font-size:12px;color:var(--muted)">No tasks assigned</div>'}
+      </div>
+    </div>`;
+  }
+
+  return `
+  <div class="stat-grid">
+    <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-label">Employees</div><div class="stat-value">${emps.length}</div><div class="stat-sub">${TEAMS.length} teams</div></div>
+    <div class="stat-card"><div class="stat-icon">🏢</div><div class="stat-label">In Office</div><div class="stat-value" style="color:var(--info)">${office}</div></div>
+    <div class="stat-card"><div class="stat-icon">🏠</div><div class="stat-label">WFH</div><div class="stat-value" style="color:var(--success)">${wfh}</div></div>
+    <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-label">Done</div><div class="stat-value" style="color:var(--success)">${done}</div></div>
+    <div class="stat-card"><div class="stat-icon">⏳</div><div class="stat-label">In Progress</div><div class="stat-value" style="color:var(--warn)">${inp}</div></div>
+    <div class="stat-card"><div class="stat-icon">📋</div><div class="stat-label">To Do</div><div class="stat-value" style="color:var(--muted)">${todo}</div></div>
+  </div>
+  ${mySection}
+  <div class="grid2">
+    <div class="card">
+      <div class="section-title" style="margin-bottom:.875rem">Team Attendance</div>
+      ${TEAMS.map(team=>{
+        const members=store.users.filter(u=>u.role==='employee'&&u.team===team);
+        const present=members.filter(u=>getAttStatus(u.id)==='Office'||getAttStatus(u.id)==='WFH').length;
+        const pct=members.length?Math.round(present/members.length*100):0;
+        return `<div style="margin-bottom:.875rem">
+          <div style="display:flex;justify-content:space-between;margin-bottom:.25rem">
+            <span style="font-size:13px;font-weight:500">${TEAM_ICONS[team]} ${team}</span>
+            <span style="font-size:12px;color:var(--muted)">${present}/${members.length}</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:var(--accent)"></div></div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="card">
+      <div class="section-title" style="margin-bottom:.875rem">Recent Tasks</div>
+      ${store.tasks.slice(0,5).map(t=>`
+        <div style="display:flex;align-items:center;gap:.5rem;padding:.375rem 0;border-bottom:1px solid var(--border)">
+          <span class="priority-dot p-${t.priority?t.priority.substring(0,3).toLowerCase():'low'}"></span>
+          <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.title}</div><div style="font-size:11px;color:var(--muted)">${t.team} · ${t.assignee||'Unassigned'}</div></div>
+          <span class="badge badge-${t.status==='Completed'?'green':t.status==='In Progress'?'blue':'gray'}">${t.status}</span>
+        </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+function pgAttendance() {
+  const emps = store.users.filter(u=>u.role==='employee');
+  const canEdit = state.user.role==='manager'||state.user.role==='director';
+  return `<div class="card">
+    <div class="section-header"><div><div class="section-title">📅 Attendance — ${fmtDate()}</div></div></div>
+    ${TEAMS.map(team=>{
+      const members = emps.filter(u=>u.team===team);
+      return `<div style="margin-bottom:1.5rem">
+        <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:.625rem">${TEAM_ICONS[team]} ${team}</div>
+        <div class="att-grid">
+          ${members.map(u=>{
+            const att = getAttStatus(u.id);
+            const canMark = canEdit||(+state.user.id===+u.id);
+            return `<div class="att-card">
+              <div class="avatar" style="background:${u.color}22;color:${u.color}">${u.name[0]}</div>
+              <div><div class="att-name">${u.name}</div><div class="att-team">${team}</div></div>
+              <div style="margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+                ${canMark?`<div style="display:flex;gap:3px">
+                  <button class="att-btn o${att==='Office'?' active':''}" data-att="Office" data-uid="${u.id}">🏢</button>
+                  <button class="att-btn w${att==='WFH'?' active':''}" data-att="WFH" data-uid="${u.id}">🏠</button>
+                  <button class="att-btn a${att==='Absent'?' active':''}" data-att="Absent" data-uid="${u.id}">✕</button>
+                </div>`:``}
+                <span class="badge badge-${att==='Office'?'blue':att==='WFH'?'green':'gray'}">${att||'—'}</span>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+function pgTasks() {
+  const cols = ['To Do','In Progress','Completed'];
+  const isManager = state.user.role==='manager';
+  const isEmployee = state.user.role==='employee';
+  const myTasks = isEmployee ? store.tasks.filter(t=>t.assignee===state.user.name) : store.tasks;
+  const modal = state.showTaskModal ? taskModal() : '';
+  return `${modal}
+  <div class="section-header" style="margin-bottom:1rem">
+    <div><div class="section-title">✅ Task Board</div><div class="section-sub">${isEmployee?'Your assigned tasks':isManager?'All tasks':'View only'}</div></div>
+    ${isManager?`<button class="btn btn-primary btn-sm" id="btn-add-task">+ New Task</button>`:''}
+  </div>
+  <div class="kanban">
+    ${cols.map(col=>{
+      const colTasks = myTasks.filter(t=>t.status===col);
+      return `<div class="kanban-col">
+        <div class="kanban-col-head">
+          <span class="kanban-col-title" style="color:${col==='Completed'?'var(--success)':col==='In Progress'?'var(--info)':'var(--muted)'}">${col}</span>
+          <span class="kanban-count">${colTasks.length}</span>
+        </div>
+        ${colTasks.map(t=>`<div class="task-card">
+          <div class="task-title">${t.title}</div>
+          <div class="task-meta">
+            <span class="priority-dot p-${t.priority?t.priority.substring(0,3).toLowerCase():'low'}"></span>
+            <span class="badge badge-${t.priority==='High'?'red':t.priority==='Medium'?'amber':'green'}">${t.priority||'Low'}</span>
+            <span class="badge badge-gray">${t.team}</span>
+          </div>
+          ${t.assignee?`<div style="font-size:11px;color:var(--muted);margin-top:.375rem">👤 ${t.assignee}</div>`:''}
+          ${t.due?`<div style="font-size:11px;color:var(--muted)">📅 ${t.due}</div>`:''}
+          <div style="margin-top:.5rem;display:flex;gap:.375rem;flex-wrap:wrap">
+            ${isManager?`<button class="btn btn-secondary btn-sm" data-edit-task="${t.id}">Edit</button>`:''}
+            ${isEmployee&&t.assignee===state.user.name?cols.filter(c=>c!==col).map(c=>`<button class="btn btn-secondary btn-sm" data-move="${t.id}" data-to="${c}">→ ${c}</button>`).join(''):''}
+          </div>
+        </div>`).join('')}
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+function taskModal() {
+  const t = state.editTask||{};
+  const emps = store.users.filter(u=>u.role==='employee');
+  return `<div class="modal-backdrop" id="modal-bd">
+    <div class="modal">
+      <div class="modal-title">${state.editTask?'Edit Task':'New Task'}<button class="modal-close" id="btn-close-modal">✕</button></div>
+      <div class="form-group"><label>Title</label><input id="tf-title" value="${t.title||''}" placeholder="Task title"/></div>
+      <div class="field-row">
+        <div class="form-group"><label>Team</label><select id="tf-team">${TEAMS.map(tm=>`<option${t.team===tm?' selected':''}>${tm}</option>`).join('')}</select></div>
+        <div class="form-group"><label>Assignee</label><select id="tf-assignee"><option value="">Unassigned</option>${emps.map(u=>`<option${t.assignee===u.name?' selected':''}>${u.name}</option>`).join('')}</select></div>
+      </div>
+      <div class="field-row">
+        <div class="form-group"><label>Priority</label><select id="tf-priority">${['Low','Medium','High'].map(p=>`<option${(t.priority||'Medium')===p?' selected':''}>${p}</option>`).join('')}</select></div>
+        <div class="form-group"><label>Due Date</label><input type="date" id="tf-due" value="${t.due||''}"/></div>
+      </div>
+      <div class="form-group"><label>Status</label><select id="tf-status">${['To Do','In Progress','Completed'].map(s=>`<option${(t.status||'To Do')===s?' selected':''}>${s}</option>`).join('')}</select></div>
+      <div class="form-group"><label>Notes</label><textarea id="tf-notes">${t.notes||''}</textarea></div>
+      <div style="display:flex;gap:.75rem;justify-content:flex-end">
+        ${state.editTask?`<button class="btn btn-danger btn-sm" id="btn-del-task">Delete</button>`:''}
+        <button class="btn btn-secondary btn-sm" id="btn-close-modal2">Cancel</button>
+        <button class="btn btn-primary btn-sm" id="btn-save-task">${state.editTask?'Update':'Create'}</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function pgTeams() {
+  const emps = store.users.filter(u=>u.role==='employee');
+  return `<div class="section-header" style="margin-bottom:1rem"><div class="section-title">👥 Team Structure</div></div>
+  <div class="team-grid">
+    ${TEAMS.map(team=>{
+      const members = emps.filter(u=>u.team===team);
+      const lead = TEAM_LEADS[team];
+      return `<div class="team-card">
+        <div class="team-card-head" style="background:${TEAM_COLORS[team]}">
+          <div class="team-icon" style="background:rgba(255,255,255,.7)">${TEAM_ICONS[team]}</div>
+          <div><div class="team-name">${team}</div><div class="team-lead">Lead: ${lead}</div></div>
+        </div>
+        <div class="team-members">
+          <div style="font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:.375rem">Members (${members.length})</div>
+          ${members.map(u=>`<div class="member-row">
+            <div class="avatar" style="width:24px;height:24px;font-size:10px;background:${u.color}22;color:${u.color}">${u.name[0]}</div>
+            <span>${u.name}</span>
+            ${u.name===lead?`<span class="badge badge-purple" style="font-size:10px;padding:1px 6px">Lead</span>`:''}
+          </div>`).join('')}
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+function pgAnalytics() {
+  const emps = store.users.filter(u=>u.role==='employee');
+  const office = emps.filter(u=>getAttStatus(u.id)==='Office').length;
+  const wfh = emps.filter(u=>getAttStatus(u.id)==='WFH').length;
+  const absent = emps.length - office - wfh;
+  const tasks = store.tasks;
+  const tasksByTeam = TEAMS.map(t=>({
+    team:t,
+    total:tasks.filter(tk=>tk.team===t).length,
+    done:tasks.filter(tk=>tk.team===t&&tk.status==='Completed').length
+  }));
+  return `
+  <div class="stat-grid" style="margin-bottom:1.25rem">
+    <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-label">Total Employees</div><div class="stat-value">${emps.length}</div></div>
+    <div class="stat-card"><div class="stat-icon">🏢</div><div class="stat-label">In Office</div><div class="stat-value" style="color:var(--info)">${office}</div></div>
+    <div class="stat-card"><div class="stat-icon">🏠</div><div class="stat-label">WFH</div><div class="stat-value" style="color:var(--success)">${wfh}</div></div>
+    <div class="stat-card"><div class="stat-icon">❌</div><div class="stat-label">Absent</div><div class="stat-value" style="color:var(--danger)">${absent}</div></div>
+  </div>
+  <div class="grid2" style="margin-bottom:1.25rem">
+    <div class="card"><div class="section-title" style="margin-bottom:.875rem">Attendance</div><canvas id="attChart" height="220"></canvas></div>
+    <div class="card"><div class="section-title" style="margin-bottom:.875rem">Task Status</div><canvas id="taskChart" height="220"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="section-title" style="margin-bottom:.875rem">Team Productivity</div>
+    <table><thead><tr><th>Team</th><th>Total</th><th>Done</th><th>Progress</th></tr></thead><tbody>
+      ${tasksByTeam.map(t=>`<tr>
+        <td>${TEAM_ICONS[t.team]} ${t.team}</td>
+        <td>${t.total}</td>
+        <td style="color:var(--success);font-weight:500">${t.done}</td>
+        <td style="width:180px"><div style="display:flex;align-items:center;gap:.5rem">
+          <div class="progress-bar" style="flex:1"><div class="progress-fill" style="width:${t.total?Math.round(t.done/t.total*100):0}%;background:var(--success)"></div></div>
+          <span style="font-size:11px;color:var(--muted)">${t.total?Math.round(t.done/t.total*100):0}%</span>
+        </div></td>
+      </tr>`).join('')}
+    </tbody></table>
+  </div>`;
+}
+
+function pgReport() {
+  const emps = store.users.filter(u=>u.role==='employee');
+  const done = store.tasks.filter(t=>t.status==='Completed');
+  const pend = store.tasks.filter(t=>t.status!=='Completed');
+  return `
+  <div class="section-header" style="margin-bottom:1.25rem">
+    <div class="section-title">📄 Daily Report — ${fmtDate()}</div>
+    <div style="display:flex;gap:.5rem">
+      <button class="btn btn-secondary btn-sm" id="btn-csv">⬇ CSV</button>
+      <button class="btn btn-primary btn-sm" id="btn-print">🖨 Print / PDF</button>
+    </div>
+  </div>
+  <div class="card">
+    <div style="margin-bottom:1.25rem">
+      <div style="font-size:14px;font-weight:600;margin-bottom:.75rem">📅 Attendance</div>
+      <div class="stat-grid" style="margin-bottom:1rem">
+        <div class="stat-card"><div class="stat-label">Office</div><div class="stat-value" style="color:var(--info)">${emps.filter(u=>getAttStatus(u.id)==='Office').length}</div></div>
+        <div class="stat-card"><div class="stat-label">WFH</div><div class="stat-value" style="color:var(--success)">${emps.filter(u=>getAttStatus(u.id)==='WFH').length}</div></div>
+        <div class="stat-card"><div class="stat-label">Absent</div><div class="stat-value" style="color:var(--danger)">${emps.filter(u=>!getAttStatus(u.id)||getAttStatus(u.id)==='Absent').length}</div></div>
+      </div>
+      <div class="table-wrap"><table><thead><tr><th>Name</th><th>Team</th><th>Status</th></tr></thead><tbody>
+        ${emps.map(u=>`<tr><td>${u.name}</td><td>${u.team}</td><td><span class="badge badge-${getAttStatus(u.id)==='Office'?'blue':getAttStatus(u.id)==='WFH'?'green':'red'}">${getAttStatus(u.id)||'Absent'}</span></td></tr>`).join('')}
+      </tbody></table></div>
+    </div>
+    <div class="divider"></div>
+    <div style="margin-bottom:1.25rem">
+      <div style="font-size:14px;font-weight:600;margin-bottom:.75rem">✅ Completed Tasks (${done.length})</div>
+      ${done.length?`<div class="table-wrap"><table><thead><tr><th>Task</th><th>Team</th><th>Assignee</th></tr></thead><tbody>${done.map(t=>`<tr><td>${t.title}</td><td>${t.team}</td><td>${t.assignee||'—'}</td></tr>`).join('')}</tbody></table></div>`:'<div style="font-size:12px;color:var(--muted)">None yet</div>'}
+    </div>
+    <div class="divider"></div>
+    <div>
+      <div style="font-size:14px;font-weight:600;margin-bottom:.75rem">⏳ Pending Tasks (${pend.length})</div>
+      ${pend.length?`<div class="table-wrap"><table><thead><tr><th>Task</th><th>Status</th><th>Priority</th><th>Assignee</th></tr></thead><tbody>${pend.map(t=>`<tr><td>${t.title}</td><td>${t.status}</td><td>${t.priority}</td><td>${t.assignee||'—'}</td></tr>`).join('')}</tbody></table></div>`:'<div style="font-size:12px;color:var(--muted)">None</div>'}
+    </div>
+  </div>`;
+}
+
+function pgNotes() {
+  const isManager = state.user.role==='manager'||state.user.role==='director';
+  const modal = state.showNoteModal ? `<div class="modal-backdrop" id="note-bd">
+    <div class="modal">
+      <div class="modal-title">Add Note<button class="modal-close" id="btn-close-note">✕</button></div>
+      <div class="form-group"><label>Note</label><textarea id="note-text" placeholder="Write your note…"></textarea></div>
+      <div style="display:flex;justify-content:flex-end;gap:.5rem">
+        <button class="btn btn-secondary btn-sm" id="btn-close-note2">Cancel</button>
+        <button class="btn btn-primary btn-sm" id="btn-save-note">Save</button>
+      </div>
+    </div>
+  </div>` : '';
+  return `${modal}
+  <div class="section-header" style="margin-bottom:1.25rem">
+    <div class="section-title">📝 Manager Notes</div>
+    ${isManager?`<button class="btn btn-primary btn-sm" id="btn-add-note">+ Add Note</button>`:''}
+  </div>
+  ${store.notes.length ? store.notes.map(n=>`<div class="note-card">
+    <div class="note-meta">✍ ${n.author} · ${n.date}</div>
+    <div style="font-size:13px">${n.text}</div>
+    ${isManager?`<button class="btn btn-secondary btn-sm" style="position:absolute;top:.75rem;right:.75rem" data-del-note="${n.id}">Delete</button>`:''}
+  </div>`).join('') : '<div class="card" style="font-size:12px;color:var(--muted)">No notes yet.</div>'}`;
+}
+
+// ============================================================
+// BIND PAGE EVENTS
+// ============================================================
+function bindPage() {
+  // Attendance
+  document.querySelectorAll('.att-btn[data-uid]').forEach(btn => {
+    btn.onclick = () => setAttStatus(btn.dataset.uid, btn.dataset.att);
+  });
+  // Add task
+  const addTask = document.getElementById('btn-add-task');
+  if (addTask) addTask.onclick = () => { state.showTaskModal=true; state.editTask=null; render(); };
+  // Edit task
+  document.querySelectorAll('[data-edit-task]').forEach(btn => {
+    btn.onclick = e => { e.stopPropagation(); state.editTask={...store.tasks.find(t=>t.id==btn.dataset.editTask)}; state.showTaskModal=true; render(); };
+  });
+  // Move task
+  document.querySelectorAll('[data-move]').forEach(btn => {
+    btn.onclick = e => { e.stopPropagation(); moveTask(btn.dataset.move, btn.dataset.to); };
+  });
+  // Save task
+  const saveTaskBtn = document.getElementById('btn-save-task');
+  if (saveTaskBtn) saveTaskBtn.onclick = () => {
+    const title = document.getElementById('tf-title').value.trim();
+    if (!title) { showToast('Please enter a title','error'); return; }
+    saveTask({
+      id: state.editTask?.id||null,
+      title, team:document.getElementById('tf-team').value,
+      assignee:document.getElementById('tf-assignee').value,
+      priority:document.getElementById('tf-priority').value,
+      due:document.getElementById('tf-due').value,
+      status:document.getElementById('tf-status').value,
+      notes:document.getElementById('tf-notes').value
+    });
+  };
+  // Delete task
+  const delTask = document.getElementById('btn-del-task');
+  if (delTask) delTask.onclick = () => deleteTask(state.editTask.id);
+  // Close modal
+  ['btn-close-modal','btn-close-modal2'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.onclick = () => { state.showTaskModal=false; state.editTask=null; render(); };
+  });
+  const mb = document.getElementById('modal-bd');
+  if (mb) mb.onclick = e => { if(e.target===mb){state.showTaskModal=false;state.editTask=null;render();} };
+  // Notes
+  const addNote = document.getElementById('btn-add-note');
+  if (addNote) addNote.onclick = () => { state.showNoteModal=true; render(); };
+  const saveNoteBtn = document.getElementById('btn-save-note');
+  if (saveNoteBtn) saveNoteBtn.onclick = () => {
+    const txt = document.getElementById('note-text').value.trim();
+    if (!txt) return;
+    saveNote(txt);
+  };
+  ['btn-close-note','btn-close-note2'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.onclick = () => { state.showNoteModal=false; render(); };
+  });
+  const nb = document.getElementById('note-bd');
+  if (nb) nb.onclick = e => { if(e.target===nb){state.showNoteModal=false;render();} };
+  document.querySelectorAll('[data-del-note]').forEach(btn => {
+    btn.onclick = () => deleteNote(btn.dataset.delNote);
+  });
+  // Report buttons
+  const csvBtn = document.getElementById('btn-csv');
+  if (csvBtn) csvBtn.onclick = exportCSV;
+  const printBtn = document.getElementById('btn-print');
+  if (printBtn) printBtn.onclick = () => window.print();
+}
+
+function initCharts() {
+  const emps = store.users.filter(u=>u.role==='employee');
+  const office = emps.filter(u=>getAttStatus(u.id)==='Office').length;
+  const wfh = emps.filter(u=>getAttStatus(u.id)==='WFH').length;
+  const absent = emps.length-office-wfh;
+  const tasks = store.tasks;
+  const ac = document.getElementById('attChart');
+  const tc = document.getElementById('taskChart');
+  if (ac&&window.Chart) new Chart(ac,{type:'doughnut',data:{labels:['Office','WFH','Absent'],datasets:[{data:[office,wfh,absent],backgroundColor:['#3b82f6','#10b981','#ef4444'],borderWidth:2,borderColor:'#fff'}]},options:{plugins:{legend:{position:'bottom'}},cutout:'65%'}});
+  if (tc&&window.Chart) new Chart(tc,{type:'bar',data:{labels:['To Do','In Progress','Done'],datasets:[{data:[tasks.filter(t=>t.status==='To Do').length,tasks.filter(t=>t.status==='In Progress').length,tasks.filter(t=>t.status==='Completed').length],backgroundColor:['#6b7280','#3b82f6','#10b981'],borderRadius:6,borderWidth:0}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1}},x:{grid:{display:false}}}}});
+}
+
+function exportCSV() {
+  const emps = store.users.filter(u=>u.role==='employee');
+  let csv = 'Name,Team,Attendance\n';
+  emps.forEach(u => { csv += `${u.name},${u.team},${getAttStatus(u.id)||'Absent'}\n`; });
+  csv += '\nTask,Team,Assignee,Status,Priority,Due\n';
+  store.tasks.forEach(t => { csv += `"${t.title}",${t.team},${t.assignee||''},${t.status},${t.priority},${t.due}\n`; });
+  const blob = new Blob([csv],{type:'text/csv'});
+  const a = document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=`report-${TODAY}.csv`; a.click();
+}
+
+// ============================================================
+// UTILS
+// ============================================================
+function cap(s) { return s.charAt(0).toUpperCase()+s.slice(1); }
+function fmtDate() { return new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'}); }
+
+// ============================================================
+// INIT — Load demo users first, then try live data
+// ============================================================
+store.users = [
+  {id:1,name:'Naseem',role:'director',team:'',pass:'naseem123',color:'#7c3aed'},
+  {id:2,name:'Zain',role:'manager',team:'',pass:'zain123',color:'#0284c7'},
+  {id:3,name:'Hamza',role:'employee',team:'Amazon Sales',pass:'pass',color:'#059669'},
+  {id:4,name:'Sara',role:'employee',team:'Amazon Sales',pass:'pass',color:'#d97706'},
+  {id:5,name:'Ali',role:'employee',team:'Designer',pass:'pass',color:'#7c3aed'},
+  {id:6,name:'Hira',role:'employee',team:'Designer',pass:'pass',color:'#dc2626'},
+  {id:7,name:'Omar',role:'employee',team:'Customer Support',pass:'pass',color:'#0284c7'},
+  {id:8,name:'Fatima',role:'employee',team:'Customer Support',pass:'pass',color:'#059669'},
+  {id:9,name:'Bilal',role:'employee',team:'Etsy Sales',pass:'pass',color:'#d97706'},
+  {id:10,name:'Ayesha',role:'employee',team:'Etsy Sales',pass:'pass',color:'#7c3aed'}
+];
+store.tasks = [
+  {id:1,title:'Update product listings on Amazon',team:'Amazon Sales',assignee:'Hamza',priority:'High',due:'2025-07-20',status:'In Progress',notes:''},
+  {id:2,title:'Redesign homepage banner',team:'Designer',assignee:'Ali',priority:'High',due:'2025-07-22',status:'To Do',notes:''},
+  {id:3,title:'Respond to support tickets',team:'Customer Support',assignee:'Omar',priority:'Medium',due:'2025-07-19',status:'In Progress',notes:''},
+  {id:4,title:'Prepare weekly sales report',team:'Amazon Sales',assignee:'Sara',priority:'Medium',due:'2025-07-18',status:'Completed',notes:''}
+];
+store.notes = [
+  {id:1,author:'Zain',text:'Great performance this week by Amazon Sales!',date:'2025-07-17'}
+];
+
+// Try to load live data if API is configured
+if (API_URL && API_URL !== 'YOUR_APPS_SCRIPT_URL_HERE') {
+  loadData().then(() => render());
+} else {
+  render();
+}
+</script>
+</body>
+</html>
