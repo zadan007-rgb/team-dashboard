@@ -176,13 +176,13 @@ let state = {
 // API
 // ============================================================
 async function apiGet() {
-  if (!API_URL || API_URL === 'YOUR_APPS_SCRIPT_URL_HERE') return null;
+  if (!API_URL || API_URL === 'https://script.google.com/macros/s/AKfycbwbmiD8uHhT4oV1Q6vP_-lY9QX-7Yc3uIamxgVoi-K5g8T1Vo0XmYD2EYuDUvY5PNdS/exec') return null;
   const res = await fetch(API_URL + '?action=getData');
   return res.json();
 }
 
 async function apiPost(body) {
-  if (!API_URL || API_URL === 'YOUR_APPS_SCRIPT_URL_HERE') return { ok:true };
+  if (!API_URL || API_URL === 'https://script.google.com/macros/s/AKfycbwbmiD8uHhT4oV1Q6vP_-lY9QX-7Yc3uIamxgVoi-K5g8T1Vo0XmYD2EYuDUvY5PNdS/exec') return { ok:true };
   const res = await fetch(API_URL, {
     method:'POST',
     headers:{'Content-Type':'application/json'},
@@ -304,7 +304,7 @@ function render() {
 // LOGIN
 // ============================================================
 function loginHTML() {
-  const demoMode = !API_URL || API_URL === 'YOUR_APPS_SCRIPT_URL_HERE';
+  const demoMode = !API_URL || API_URL === 'https://script.google.com/macros/s/AKfycbwbmiD8uHhT4oV1Q6vP_-lY9QX-7Yc3uIamxgVoi-K5g8T1Vo0XmYD2EYuDUvY5PNdS/exec';
   return `<div class="login-wrap"><div class="login-box">
     <div class="login-logo"><div class="brand">🏢 TeamHub</div><div class="sub">Internal Company Dashboard</div></div>
     <div class="login-title">Sign In</div>
@@ -359,7 +359,7 @@ function navItems() {
 function appShell() {
   const nav = navItems();
   const titles = {dashboard:'Dashboard',attendance:'Attendance',tasks:'Tasks',teams:'Teams',analytics:'Analytics',report:'Report',notes:'Notes'};
-  const connected = API_URL && API_URL !== 'YOUR_APPS_SCRIPT_URL_HERE';
+  const connected = API_URL && API_URL !== 'https://script.google.com/macros/s/AKfycbwbmiD8uHhT4oV1Q6vP_-lY9QX-7Yc3uIamxgVoi-K5g8T1Vo0XmYD2EYuDUvY5PNdS/exec';
   return `
   <div class="overlay${state.mobileOpen?' open':''}" id="overlay"></div>
   <div class="app">
@@ -826,7 +826,7 @@ store.notes = [
 ];
 
 // Try to load live data if API is configured
-if (API_URL && API_URL !== 'YOUR_APPS_SCRIPT_URL_HERE') {
+if (API_URL && API_URL !== 'https://script.google.com/macros/s/AKfycbwbmiD8uHhT4oV1Q6vP_-lY9QX-7Yc3uIamxgVoi-K5g8T1Vo0XmYD2EYuDUvY5PNdS/exec') {
   loadData().then(() => render());
 } else {
   render();
